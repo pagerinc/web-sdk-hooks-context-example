@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "tslint:latest",
+    "tslint-eslint-rules",
+    "tslint-config-prettier"
+  ],
+  "rules": {
+    "no-console": [true, "warning"],
+    "no-implicit-dependencies": [true, "dev"],
+    "no-submodule-imports": false
+  }
+}

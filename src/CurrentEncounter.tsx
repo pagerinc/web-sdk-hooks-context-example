@@ -112,7 +112,7 @@ const MessageItem: React.SFC<IMessageItemProps> = ({message}) => {
     <Comment
       actions={[<a onClick={ () => setShowMore(!showMore) }>{showMore ? 'hide' : 'show'} JSON</a>]}
       author={message.sender.name}
-      avatar={message.sender.avatarUrl}
+      avatar={message.sender.avatarUrl || "user.png"}
       content={content}
       datetime={moment(message.time).calendar()}
     />

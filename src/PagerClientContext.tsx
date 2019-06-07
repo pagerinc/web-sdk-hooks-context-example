@@ -1,22 +1,46 @@
 import PagerClient from '@pgr/web-sdk/PagerClient';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
-interface IPagerClientContext {
-  pagerClient: PagerClient | null;
-  setPagerClient: React.Dispatch<React.SetStateAction<PagerClient | null>>;
-}
+const PagerClientStateContext = createContext<PagerClient | null>(null);
+const PagerClientUpdaterContext = createContext<React.Dispatch<
+  React.SetStateAction<PagerClient | null>
+> | null>(null);
 
-const PagerClientContext = createContext<IPagerClientContext | null>(null);
-
-export function PagerClientProvider({children}: {children: React.ReactChildren}) {
+export function PagerClientProvider({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
   const [pagerClient, setPagerClient] = useState<PagerClient | null>(null);
-  const value: IPagerClientContext = { pagerClient, setPagerClient };
 
   return (
-    <PagerClientContext.Provider value={value}>{children}</PagerClientContext.Provider>
+    <PagerClientStateContext.Provider value={pagerClient}>
+      <PagerClientUpdaterContext.Provider value={setPagerClient}>
+        {children}
+      </PagerClientUpdaterContext.Provider>
+    </PagerClientStateContext.Provider>
   );
 }
 
-export const PagerClientConsumer = PagerClientContext.Consumer;
+export function usePagerClientState() {
+  const pagerClientState = useContext(PagerClientStateContext);
+  if (typeof pagerClientState === undefined) {
+    throw new Error(
+      'usePagerClientState must be used within a PagerClientProvider',
+    );
+  }
+  return pagerClientState;
+}
 
-export const usePagerClient = () => useContext<IPagerClientContext | null>(PagerClientContext);
+export function usePagerClientUpdater() {
+  const setPagerClient = useContext(PagerClientUpdaterContext);
+
+  if (!setPagerClient) {
+    throw new Error('usePagerClientUpdater must be used within a PagerClientProvider');
+  }
+
+  const setter = useCallback(pagerClient => setPagerClient(pagerClient), [
+    setPagerClient,
+  ]);
+  return setter;
+}

@@ -1,10 +1,9 @@
 import { Layout, Menu, Skeleton } from 'antd';
 import React from 'react';
 
-import { usePagerClient } from './PagerClientContext';
-import { usePagerEncounter } from './PagerEncounterContext';
+import { usePagerClientState } from './PagerClientContext';
+import { usePagerEncounterState, usePagerEncounterUpdater } from './PagerEncounterContext';
 
-import PagerEncounter from '@pgr/web-sdk/PagerEncounter';
 import { ClickParam } from 'antd/lib/menu';
 import { useLoad } from './hooks';
 import { SectionType } from './types';
@@ -16,14 +15,15 @@ interface IHeaderProps {
 }
 
 const Header: React.SFC<IHeaderProps> = ({ setSection }) => {
-  const { pagerClient } = usePagerClient()!;
-  const { pagerEncounter, setPagerEncounter } = usePagerEncounter()!;
-
-  if (!pagerClient) {
-    return null;
-  }
+  const pagerClient = usePagerClientState();
+  const pagerEncounter = usePagerEncounterState();
+  const setPagerEncounter = usePagerEncounterUpdater();
 
   const [currentEncounter, isLoadingEncounter] = useLoad(async () => {
+    if (!pagerClient) {
+      return null;
+    }
+
     const newEncounter = await pagerClient.getCurrentEncounter();
     if (newEncounter) {
       setPagerEncounter(newEncounter);
@@ -35,12 +35,17 @@ const Header: React.SFC<IHeaderProps> = ({ setSection }) => {
     const section = key as SectionType;
 
     if (section === 'logout') {
-      return pagerClient.logout();
+
+      return pagerClient && pagerClient.logout();
     }
     if (section === 'current-encounter' && !pagerEncounter) {
       return;
     }
     return setSection(section);
+  }
+
+  if (!pagerClient) {
+    return null;
   }
 
   return (

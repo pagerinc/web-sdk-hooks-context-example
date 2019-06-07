@@ -6,7 +6,7 @@ import ReactJsonView from 'react-json-view';
 import Message from '@pgr/web-sdk/Messages';
 import { isImageMessage } from '@pgr/web-sdk/Messages/ImageMessage'
 import { isTextMessage } from '@pgr/web-sdk/Messages/TextMessage'
-import { usePagerEncounter } from './PagerEncounterContext';
+import { usePagerEncounterState } from './PagerEncounterContext';
 
 
 interface IState {
@@ -42,7 +42,7 @@ function reducer(state: IState, action: ActionType) {
 }
 
 export default function CurrentEncounter() {
-  const { pagerEncounter } = usePagerEncounter()!;
+  const pagerEncounter = usePagerEncounterState();
 
   const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -76,7 +76,7 @@ export default function CurrentEncounter() {
     pagerEncounter.connect();
 
     loadHistory();
-  }, []);
+  }, [pagerEncounter]);
 
   return (
     <PageHeader title="Encounter">
@@ -125,7 +125,7 @@ const renderMessage = (message: Message) => {
   }
 
   if (isImageMessage(message)) {
-    return <img src={message.imageUrl} />;
+    return <img src={message.imageUrl} alt={message.sender.name} />;
   }
 
   return null;

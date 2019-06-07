@@ -1,22 +1,46 @@
 import PagerEncounter from '@pgr/web-sdk/PagerEncounter';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
-interface IPagerEncounterContext {
-  pagerEncounter: PagerEncounter | null;
-  setPagerEncounter: React.Dispatch<React.SetStateAction<PagerEncounter | null>>;
-}
+const PagerEncounterStateContext = createContext<PagerEncounter | null>(null);
+const PagerEncounterUpdaterContext = createContext<React.Dispatch<
+  React.SetStateAction<PagerEncounter | null>
+> | null>(null);
 
-const PagerEncounterContext = createContext<IPagerEncounterContext | null>(null);
-
-export function PagerEncounterProvider({children}: {children: React.ReactChildren}) {
+export function PagerEncounterProvider({
+  children,
+}: {
+  children: React.ReactElement;
+}) {
   const [pagerEncounter, setPagerEncounter] = useState<PagerEncounter | null>(null);
-  const value: IPagerEncounterContext = { pagerEncounter, setPagerEncounter };
 
   return (
-    <PagerEncounterContext.Provider value={value}>{children}</PagerEncounterContext.Provider>
+    <PagerEncounterStateContext.Provider value={pagerEncounter}>
+      <PagerEncounterUpdaterContext.Provider value={setPagerEncounter}>
+        {children}
+      </PagerEncounterUpdaterContext.Provider>
+    </PagerEncounterStateContext.Provider>
   );
 }
 
-export const PagerEncounterConsumer = PagerEncounterContext.Consumer;
+export function usePagerEncounterState() {
+  const pagerEncounterState = useContext(PagerEncounterStateContext);
+  if (typeof pagerEncounterState === undefined) {
+    throw new Error(
+      'usePagerEncounterState must be used within a PagerEncounterProvider',
+    );
+  }
+  return pagerEncounterState;
+}
 
-export const usePagerEncounter = () => useContext<IPagerEncounterContext | null>(PagerEncounterContext);
+export function usePagerEncounterUpdater() {
+  const setPagerEncounter = useContext(PagerEncounterUpdaterContext);
+
+  if (!setPagerEncounter) {
+    throw new Error('usePagerEncounterUpdater must be used within a PagerEncounterProvider');
+  }
+
+  const setter = useCallback(pagerEncounter => setPagerEncounter(pagerEncounter), [
+    setPagerEncounter,
+  ]);
+  return setter;
+}
